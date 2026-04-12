@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, sessions, messages } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,83 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createSession(userId: number, title: string = "Untitled Session") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(sessions).values({ userId, title });
+  const result = await db.select().from(sessions).where(eq(sessions.userId, userId)).orderBy(desc(sessions.createdAt)).limit(1);
+  return result[0];
+}
+
+export async function getSessionsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.userId, userId))
+    .orderBy(desc(sessions.createdAt));
+  
+  return result;
+}
+
+export async function getSessionById(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.id, sessionId))
+    .limit(1);
+  
+  return result[0];
+}
+
+export async function getMessagesBySessionId(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.sessionId, sessionId))
+    .orderBy(asc(messages.createdAt));
+  
+  return result;
+}
+
+export async function addMessage(sessionId: number, role: "user" | "assistant", content: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(messages).values({ sessionId, role, content });
+  const result = await db.select().from(messages).where(eq(messages.sessionId, sessionId)).orderBy(desc(messages.createdAt)).limit(1);
+  return result[0];
+}
+
+export async function updateSessionSummary(sessionId: number, summary: string, actionItems: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(sessions)
+    .set({ summary, actionItems, updatedAt: new Date() })
+    .where(eq(sessions.id, sessionId));
+}
+
+export async function markSessionEmailSent(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(sessions)
+    .set({ emailSent: 1, updatedAt: new Date() })
+    .where(eq(sessions.id, sessionId));
 }
 
 // TODO: add feature queries here as your schema grows.

@@ -1,0 +1,49 @@
+# Business Therapist Chatbot - Project TODO
+
+## Core Features
+
+- [x] Database schema for sessions, messages, and summaries
+- [x] Landing page with hero section and CTA button
+- [x] AI-powered chat interface with streaming responses
+- [x] User authentication via Manus OAuth
+- [x] Persistent conversation history in database
+- [x] Multiple session support with sidebar navigation
+- [x] Typing indicator during AI response generation
+- [x] Session summary generation using LLM
+- [x] Automatic email delivery of session summaries with action items
+- [x] Session list view showing all user conversations
+- [x] Session detail view with full message history
+- [x] New session creation flow
+
+## UI/Design
+
+- [x] Neon-noir aesthetic with midnight navy background
+- [x] Hot pink headlines with electric blue outer glow effect
+- [x] Cyan and magenta vertical accent lines
+- [x] Sleek, widely-spaced secondary typography
+- [x] Responsive layout for mobile and desktop
+- [x] Chat message UI with user and AI message styling
+- [x] Loading states and animations
+
+## Backend/API
+
+- [x] tRPC procedures for chat operations
+- [x] LLM integration with business therapist persona
+- [x] Session management procedures
+- [x] Message streaming implementation
+- [x] Session summary generation procedure
+- [x] Email service integration for sending summaries
+- [x] Database queries for sessions and messages
+
+## Testing
+
+- [ ] Unit tests for core procedures
+- [ ] Integration tests for chat flow
+- [ ] Manual testing of chat flow and email delivery
+
+## Deployment
+
+- [ ] Final UI polish and refinement
+- [ ] Cross-browser testing
+- [ ] Performance optimization
+- [x] Create checkpoint before publishing
