@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Plus, Menu, X, Download } from "lucide-react";
+import { Loader2, Send, Plus, Menu, X, Download, Settings } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Streamdown } from "streamdown";
 
@@ -214,10 +214,11 @@ export default function Chat() {
             </div>
           </div>
 
-          {currentSessionId && messages.length > 0 && (
-            <Button
-              onClick={handleGenerateSummary}
-              disabled={generateSummaryMutation.isPending}
+          <div className="flex items-center gap-2">
+            {currentSessionId && messages.length > 0 && (
+              <Button
+                onClick={handleGenerateSummary}
+                disabled={generateSummaryMutation.isPending}
               variant="outline"
               size="sm"
               className="gap-2"
@@ -227,9 +228,17 @@ export default function Chat() {
               ) : (
                 <Download className="w-4 h-4" />
               )}
-              Summary
+                Summary
+              </Button>
+            )}
+            <Button
+              onClick={() => navigate("/profile" as any)}
+              variant="outline"
+              size="sm"
+            >
+              Profile
             </Button>
-          )}
+          </div>
         </div>
 
         {/* Messages Area */}

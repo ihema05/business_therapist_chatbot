@@ -55,3 +55,16 @@
 - [x] Test end-to-end chat flow with message sending
 - [x] Verify session creation and persistence
 - [x] Test session list and history retrieval
+
+## User Profile Page Feature
+
+- [x] Update database schema with user preferences table
+- [x] Add notification settings to user preferences
+- [x] Create backend procedures for profile management
+- [x] Build profile page UI with account information section
+- [x] Add preferences settings section (theme, language, etc.)
+- [x] Add notification settings section
+- [x] Add profile update mutation and form handling
+- [x] Integrate profile page into navigation
+- [x] Add profile link to chat page header
+- [x] Test profile page functionality

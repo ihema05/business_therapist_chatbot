@@ -12,6 +12,8 @@ import {
   addMessage,
   updateSessionSummary,
   markSessionEmailSent,
+  getUserPreferences,
+  upsertUserPreferences,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { sendEmail, generateSessionSummaryEmail } from "./email";
@@ -207,6 +209,45 @@ Respond ONLY with valid JSON in this format:
         }
 
         return parsed;
+      }),
+  }),
+
+  profile: router({
+    getPreferences: protectedProcedure.query(async ({ ctx }) => {
+      const prefs = await getUserPreferences(ctx.user.id);
+      return prefs || {
+        userId: ctx.user.id,
+        theme: "dark",
+        language: "en",
+        emailNotifications: 1,
+        summaryNotifications: 1,
+        weeklyDigest: 0,
+        timezone: "UTC",
+      };
+    }),
+
+    updatePreferences: protectedProcedure
+      .input(
+        z.object({
+          theme: z.enum(["dark", "light"]).optional(),
+          language: z.string().optional(),
+          emailNotifications: z.boolean().optional(),
+          summaryNotifications: z.boolean().optional(),
+          weeklyDigest: z.boolean().optional(),
+          timezone: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const updateData: Record<string, any> = {};
+        if (input.theme !== undefined) updateData.theme = input.theme;
+        if (input.language !== undefined) updateData.language = input.language;
+        if (input.emailNotifications !== undefined) updateData.emailNotifications = input.emailNotifications ? 1 : 0;
+        if (input.summaryNotifications !== undefined) updateData.summaryNotifications = input.summaryNotifications ? 1 : 0;
+        if (input.weeklyDigest !== undefined) updateData.weeklyDigest = input.weeklyDigest ? 1 : 0;
+        if (input.timezone !== undefined) updateData.timezone = input.timezone;
+
+        const updated = await upsertUserPreferences(ctx.user.id, updateData);
+        return updated;
       }),
   }),
 });

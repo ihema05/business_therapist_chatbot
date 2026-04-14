@@ -50,4 +50,18 @@ export const messages = mysqlTable("messages", {
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
 
-// TODO: Add your tables here
+export const userPreferences = mysqlTable("userPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  theme: varchar("theme", { length: 20 }).default("dark").notNull(),
+  language: varchar("language", { length: 10 }).default("en").notNull(),
+  emailNotifications: int("emailNotifications").default(1).notNull(),
+  summaryNotifications: int("summaryNotifications").default(1).notNull(),
+  weeklyDigest: int("weeklyDigest").default(0).notNull(),
+  timezone: varchar("timezone", { length: 50 }).default("UTC").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = typeof userPreferences.$inferInsert;

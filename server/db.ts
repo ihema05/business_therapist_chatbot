@@ -1,6 +1,6 @@
 import { asc, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, sessions, messages } from "../drizzle/schema";
+import { InsertUser, users, sessions, messages, userPreferences, InsertUserPreferences } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -152,8 +152,10 @@ export async function updateSessionSummary(sessionId: number, summary: string, a
   
   await db
     .update(sessions)
-    .set({ summary, actionItems, updatedAt: new Date() })
+    .set({ summary, actionItems })
     .where(eq(sessions.id, sessionId));
+  
+  return getSessionById(sessionId);
 }
 
 export async function markSessionEmailSent(sessionId: number) {
@@ -162,8 +164,41 @@ export async function markSessionEmailSent(sessionId: number) {
   
   await db
     .update(sessions)
-    .set({ emailSent: 1, updatedAt: new Date() })
+    .set({ emailSent: 1 })
     .where(eq(sessions.id, sessionId));
 }
 
-// TODO: add feature queries here as your schema grows.
+// Profile management functions
+export async function getUserPreferences(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, userId))
+    .limit(1);
+  
+  return result[0];
+}
+
+export async function upsertUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getUserPreferences(userId);
+  
+  if (existing) {
+    await db
+      .update(userPreferences)
+      .set(preferences)
+      .where(eq(userPreferences.userId, userId));
+  } else {
+    await db.insert(userPreferences).values({
+      userId,
+      ...preferences,
+    });
+  }
+  
+  return getUserPreferences(userId);
+}
