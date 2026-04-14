@@ -76,4 +76,4 @@
 - [x] Add delete button to session list UI
 - [x] Add rename dialog to session list UI
 - [x] Test delete and rename functionality
-- [ ] Create reusable skill for profile page process
+- [x] Create reusable skill for profile page process
