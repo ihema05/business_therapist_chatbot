@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Plus, Menu, X, Download, Settings } from "lucide-react";
+import { Loader2, Send, Plus, Menu, X, Download, Settings, Trash2, Edit2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Streamdown } from "streamdown";
 
@@ -43,6 +43,9 @@ export default function Chat() {
     { enabled: !!currentSessionId }
   );
 
+  const [renamingSessionId, setRenamingSessionId] = useState<number | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+
   const createSessionMutation = trpc.chat.createSession.useMutation({
     onSuccess: (session) => {
       setCurrentSessionId(session.id);
@@ -66,6 +69,30 @@ export default function Chat() {
     },
     onError: () => {
       setIsTyping(false);
+    },
+  });
+
+  const deleteSessionMutation = trpc.chat.deleteSession.useMutation({
+    onSuccess: () => {
+      if (renamingSessionId === currentSessionId) {
+        setCurrentSessionId(null);
+        setMessages([]);
+      }
+      refetchSessions();
+    },
+    onError: () => {
+      alert("Failed to delete session");
+    },
+  });
+
+  const renameSessionMutation = trpc.chat.renameSession.useMutation({
+    onSuccess: () => {
+      setRenamingSessionId(null);
+      setRenameValue("");
+      refetchSessions();
+    },
+    onError: () => {
+      alert("Failed to rename session");
     },
   });
 
@@ -170,20 +197,73 @@ export default function Chat() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {sessions?.map((session) => (
-            <button
-              key={session.id}
-              onClick={() => handleSelectSession(session.id)}
-              className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
-                currentSessionId === session.id
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-card-foreground/10 text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="font-semibold truncate">{session.title}</div>
-              <div className="text-xs opacity-75 mt-1">
-                {new Date(session.createdAt).toLocaleDateString()}
-              </div>
-            </button>
+            <div key={session.id} className="group">
+              {renamingSessionId === session.id ? (
+                <div className="flex gap-2 p-2">
+                  <Input
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    placeholder="New title..."
+                    className="text-sm h-8"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => renameSessionMutation.mutate({ sessionId: session.id, newTitle: renameValue })}
+                    disabled={!renameValue.trim()}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setRenamingSessionId(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handleSelectSession(session.id)}
+                    className={`flex-1 text-left p-3 rounded-lg transition-all duration-200 ${
+                      currentSessionId === session.id
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-card-foreground/10 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <div className="font-semibold truncate">{session.title}</div>
+                    <div className="text-xs opacity-75 mt-1">
+                      {new Date(session.createdAt).toLocaleDateString()}
+                    </div>
+                  </button>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 pr-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setRenamingSessionId(session.id);
+                        setRenameValue(session.title);
+                      }}
+                    >
+                      ✎
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm("Delete this session?")) {
+                          deleteSessionMutation.mutate({ sessionId: session.id });
+                        }
+                      }}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </div>
 

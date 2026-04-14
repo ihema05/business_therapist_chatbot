@@ -68,3 +68,12 @@
 - [x] Integrate profile page into navigation
 - [x] Add profile link to chat page header
 - [x] Test profile page functionality
+
+## Session Management Features
+
+- [x] Add deleteSession backend procedure
+- [x] Add renameSession backend procedure
+- [x] Add delete button to session list UI
+- [x] Add rename dialog to session list UI
+- [x] Test delete and rename functionality
+- [ ] Create reusable skill for profile page process

@@ -14,6 +14,8 @@ import {
   markSessionEmailSent,
   getUserPreferences,
   upsertUserPreferences,
+  deleteSession,
+  renameSession,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { sendEmail, generateSessionSummaryEmail } from "./email";
@@ -46,6 +48,18 @@ export const appRouter = router({
       const userSessions = await getSessionsByUserId(ctx.user.id);
       return userSessions;
     }),
+
+    deleteSession: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await deleteSession(input.sessionId, ctx.user.id);
+      }),
+
+    renameSession: protectedProcedure
+      .input(z.object({ sessionId: z.number(), newTitle: z.string().min(1).max(255) }))
+      .mutation(async ({ ctx, input }) => {
+        return await renameSession(input.sessionId, ctx.user.id, input.newTitle);
+      }),
 
     getSession: protectedProcedure
       .input(z.object({ sessionId: z.number() }))

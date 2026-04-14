@@ -202,3 +202,34 @@ export async function upsertUserPreferences(userId: number, preferences: Partial
   
   return getUserPreferences(userId);
 }
+
+// Session management functions
+export async function deleteSession(sessionId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const session = await getSessionById(sessionId);
+  if (!session || session.userId !== userId) {
+    throw new Error("Session not found or unauthorized");
+  }
+  
+  await db.delete(sessions).where(eq(sessions.id, sessionId));
+  return { success: true };
+}
+
+export async function renameSession(sessionId: number, userId: number, newTitle: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const session = await getSessionById(sessionId);
+  if (!session || session.userId !== userId) {
+    throw new Error("Session not found or unauthorized");
+  }
+  
+  await db
+    .update(sessions)
+    .set({ title: newTitle })
+    .where(eq(sessions.id, sessionId));
+  
+  return getSessionById(sessionId);
+}
