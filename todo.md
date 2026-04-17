@@ -89,3 +89,12 @@
 - [x] Add tag editing and deletion functionality
 - [x] Test tag creation, filtering, and persistence
 - [x] Create checkpoint with tags feature complete
+
+## Settings and About Us Pages
+
+- [x] Create Settings page with app preferences
+- [x] Create About Us page with company information
+- [x] Integrate pages into navigation
+- [x] Add route links to all pages
+- [x] Test navigation between pages
+- [x] Create checkpoint with new pages

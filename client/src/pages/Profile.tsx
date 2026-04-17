@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Save, Mail, Bell, Palette } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Mail, Bell, Palette, Settings } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -93,16 +93,34 @@ export default function Profile() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate("/chat" as any)}
-            className="p-2 hover:bg-card rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold neon-glow">Profile Settings</h1>
-            <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
+        <div className="container max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate("/chat" as any)}
+              className="p-2 hover:bg-card rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold neon-glow">Profile Settings</h1>
+              <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate("/settings" as any)}
+              variant="outline"
+              size="sm"
+            >
+              App Settings
+            </Button>
+            <Button
+              onClick={() => navigate("/about" as any)}
+              variant="outline"
+              size="sm"
+            >
+              About
+            </Button>
           </div>
         </div>
       </div>

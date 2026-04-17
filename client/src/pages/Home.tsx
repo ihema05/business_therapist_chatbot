@@ -27,11 +27,29 @@ export default function Home() {
             <span className="text-xl font-bold neon-glow">Business Therapist</span>
           </div>
           {isAuthenticated && (
+            <div className="flex gap-4">
+              <Button
+                onClick={() => navigate("/settings" as any)}
+                variant="outline"
+                size="sm"
+              >
+                Settings
+              </Button>
+              <Button
+                onClick={() => navigate("/chat" as any)}
+                className="btn-neon"
+              >
+                Go to Chat
+              </Button>
+            </div>
+          )}
+          {!isAuthenticated && (
             <Button
-              onClick={() => navigate("/chat" as any)}
-              className="btn-neon"
+              onClick={() => navigate("/about" as any)}
+              variant="outline"
+              size="sm"
             >
-              Go to Chat
+              Learn More
             </Button>
           )}
         </div>
@@ -225,9 +243,10 @@ export default function Home() {
         <div className="container flex items-center justify-between text-sm text-muted-foreground">
           <p>&copy; 2026 Business Therapist. All sessions are confidential.</p>
           <div className="flex gap-6">
+            <button onClick={() => navigate("/about" as any)} className="hover:text-primary transition-colors">About</button>
+            <button onClick={() => navigate("/settings" as any)} className="hover:text-primary transition-colors">Settings</button>
             <a href="#" className="hover:text-primary transition-colors">Privacy</a>
             <a href="#" className="hover:text-primary transition-colors">Terms</a>
-            <a href="#" className="hover:text-primary transition-colors">Contact</a>
           </div>
         </div>
       </footer>

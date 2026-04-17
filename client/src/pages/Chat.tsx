@@ -376,6 +376,13 @@ export default function Chat() {
               </Button>
             )}
             <Button
+              onClick={() => navigate("/settings" as any)}
+              variant="outline"
+              size="sm"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+            <Button
               onClick={() => navigate("/profile" as any)}
               variant="outline"
               size="sm"
