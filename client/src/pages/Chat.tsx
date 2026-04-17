@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, Plus, Menu, X, Download, Settings, Trash2, Edit2 } from "lucide-react";
+import { Loader2, Send, Plus, Menu, X, Download, Settings, Trash2, Edit2, Tag } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Streamdown } from "streamdown";
 
@@ -20,6 +20,12 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   createdAt: Date;
+}
+
+interface TagType {
+  id: number;
+  name: string;
+  color: string;
 }
 
 export default function Chat() {
@@ -45,6 +51,53 @@ export default function Chat() {
 
   const [renamingSessionId, setRenamingSessionId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [showTagsModal, setShowTagsModal] = useState(false);
+  const [selectedSessionForTags, setSelectedSessionForTags] = useState<number | null>(null);
+  const [sessionTags, setSessionTags] = useState<TagType[]>([]);
+  const [filterTag, setFilterTag] = useState<number | null>(null);
+
+  const { data: allTags, refetch: refetchTags } = trpc.tags.getTags.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  const { data: currentSessionTags } = trpc.tags.getSessionTags.useQuery(
+    { sessionId: selectedSessionForTags! },
+    { enabled: !!selectedSessionForTags }
+  );
+
+  useEffect(() => {
+    if (currentSessionTags) {
+      setSessionTags(currentSessionTags);
+    }
+  }, [currentSessionTags]);
+
+  const addTagToSessionMutation = trpc.tags.addTagToSession.useMutation({
+    onSuccess: () => {
+      if (selectedSessionForTags) {
+        trpc.useUtils().tags.getSessionTags.invalidate({ sessionId: selectedSessionForTags });
+      }
+    },
+  });
+
+  const removeTagFromSessionMutation = trpc.tags.removeTagFromSession.useMutation({
+    onSuccess: () => {
+      if (selectedSessionForTags) {
+        trpc.useUtils().tags.getSessionTags.invalidate({ sessionId: selectedSessionForTags });
+      }
+    },
+  });
+
+  const createTagMutation = trpc.tags.createTag.useMutation({
+    onSuccess: () => {
+      refetchTags();
+    },
+  });
+
+  const deleteTagMutation = trpc.tags.deleteTag.useMutation({
+    onSuccess: () => {
+      refetchTags();
+    },
+  });
 
   const createSessionMutation = trpc.chat.createSession.useMutation({
     onSuccess: (session) => {
@@ -243,6 +296,17 @@ export default function Chat() {
                       size="sm"
                       variant="ghost"
                       onClick={() => {
+                        setSelectedSessionForTags(session.id);
+                        setShowTagsModal(true);
+                      }}
+                      title="Manage tags"
+                    >
+                      <Tag className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
                         setRenamingSessionId(session.id);
                         setRenameValue(session.title);
                       }}
@@ -414,6 +478,112 @@ export default function Chat() {
           </div>
         )}
       </div>
+
+      {/* Tags Modal */}
+      {showTagsModal && selectedSessionForTags && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-96 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Manage Tags</h2>
+              <button
+                onClick={() => setShowTagsModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current Tags */}
+            {sessionTags.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium mb-2">Current Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {sessionTags.map((tag) => (
+                    <div
+                      key={tag.id}
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium text-white ${
+                        tag.color === "red"
+                          ? "bg-red-500"
+                          : tag.color === "green"
+                          ? "bg-green-500"
+                          : tag.color === "yellow"
+                          ? "bg-yellow-500"
+                          : tag.color === "purple"
+                          ? "bg-purple-500"
+                          : tag.color === "pink"
+                          ? "bg-pink-500"
+                          : tag.color === "cyan"
+                          ? "bg-cyan-500"
+                          : "bg-blue-500"
+                      }`}
+                    >
+                      {tag.name}
+                      <button
+                        onClick={() =>
+                          removeTagFromSessionMutation.mutate({
+                            sessionId: selectedSessionForTags,
+                            tagId: tag.id,
+                          })
+                        }
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Available Tags */}
+            {allTags && allTags.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium mb-2">Add Tags</h3>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {allTags
+                    .filter((tag) => !sessionTags.some((st) => st.id === tag.id))
+                    .map((tag) => (
+                      <button
+                        key={tag.id}
+                        onClick={() =>
+                          addTagToSessionMutation.mutate({
+                            sessionId: selectedSessionForTags,
+                            tagId: tag.id,
+                          })
+                        }
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          tag.color === "red"
+                            ? "text-red-500 hover:bg-red-500/10"
+                            : tag.color === "green"
+                            ? "text-green-500 hover:bg-green-500/10"
+                            : tag.color === "yellow"
+                            ? "text-yellow-500 hover:bg-yellow-500/10"
+                            : tag.color === "purple"
+                            ? "text-purple-500 hover:bg-purple-500/10"
+                            : tag.color === "pink"
+                            ? "text-pink-500 hover:bg-pink-500/10"
+                            : tag.color === "cyan"
+                            ? "text-cyan-500 hover:bg-cyan-500/10"
+                            : "text-blue-500 hover:bg-blue-500/10"
+                        }`}
+                      >
+                        + {tag.name}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={() => setShowTagsModal(false)}
+              className="w-full"
+              variant="outline"
+            >
+              Done
+            </Button>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, sessions, messages, userPreferences, InsertUserPreferences } from "../drizzle/schema";
+import { InsertUser, users, sessions, messages, userPreferences, InsertUserPreferences, tags, sessionTags, Tag, InsertTag, SessionTag, InsertSessionTag } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -232,4 +232,124 @@ export async function renameSession(sessionId: number, userId: number, newTitle:
     .where(eq(sessions.id, sessionId));
   
   return getSessionById(sessionId);
+}
+
+// Tag management functions
+export async function getUserTags(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(tags)
+    .where(eq(tags.userId, userId));
+}
+
+export async function createTag(userId: number, name: string, color: string = "blue") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(tags).values({
+    userId,
+    name,
+    color,
+  });
+  
+  const tagId = (result as any).insertId;
+  return await db.select().from(tags).where(eq(tags.id, tagId)).limit(1).then(rows => rows[0]);
+}
+
+export async function updateTag(tagId: number, userId: number, name?: string, color?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const tag = await db.select().from(tags).where(eq(tags.id, tagId)).limit(1).then(rows => rows[0]);
+  if (!tag || tag.userId !== userId) {
+    throw new Error("Tag not found or unauthorized");
+  }
+  
+  const updates: any = {};
+  if (name !== undefined) updates.name = name;
+  if (color !== undefined) updates.color = color;
+  
+  if (Object.keys(updates).length > 0) {
+    await db.update(tags).set(updates).where(eq(tags.id, tagId));
+  }
+  
+  return await db.select().from(tags).where(eq(tags.id, tagId)).limit(1).then(rows => rows[0]);
+}
+
+export async function deleteTag(tagId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const tag = await db.select().from(tags).where(eq(tags.id, tagId)).limit(1).then(rows => rows[0]);
+  if (!tag || tag.userId !== userId) {
+    throw new Error("Tag not found or unauthorized");
+  }
+  
+  await db.delete(tags).where(eq(tags.id, tagId));
+  return { success: true };
+}
+
+export async function addTagToSession(sessionId: number, tagId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const session = await getSessionById(sessionId);
+  if (!session || session.userId !== userId) {
+    throw new Error("Session not found or unauthorized");
+  }
+  
+  const tag = await db.select().from(tags).where(eq(tags.id, tagId)).limit(1).then(rows => rows[0]);
+  if (!tag || tag.userId !== userId) {
+    throw new Error("Tag not found or unauthorized");
+  }
+  
+  // Check if already tagged
+  const existing = await db
+    .select()
+    .from(sessionTags)
+    .where(and(eq(sessionTags.sessionId, sessionId), eq(sessionTags.tagId, tagId)))
+    .limit(1);
+  
+  if (existing.length === 0) {
+    await db.insert(sessionTags).values({
+      sessionId,
+      tagId,
+    });
+  }
+  
+  return { success: true };
+}
+
+export async function removeTagFromSession(sessionId: number, tagId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const session = await getSessionById(sessionId);
+  if (!session || session.userId !== userId) {
+    throw new Error("Session not found or unauthorized");
+  }
+  
+  await db
+    .delete(sessionTags)
+    .where(and(eq(sessionTags.sessionId, sessionId), eq(sessionTags.tagId, tagId)));
+  
+  return { success: true };
+}
+
+export async function getSessionTags(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      color: tags.color,
+    })
+    .from(sessionTags)
+    .innerJoin(tags, eq(sessionTags.tagId, tags.id))
+    .where(eq(sessionTags.sessionId, sessionId));
 }

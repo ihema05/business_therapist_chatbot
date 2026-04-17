@@ -16,6 +16,13 @@ import {
   upsertUserPreferences,
   deleteSession,
   renameSession,
+  getUserTags,
+  createTag,
+  updateTag,
+  deleteTag,
+  addTagToSession,
+  removeTagFromSession,
+  getSessionTags,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { sendEmail, generateSessionSummaryEmail } from "./email";
@@ -223,6 +230,48 @@ Respond ONLY with valid JSON in this format:
         }
 
         return parsed;
+      }),
+  }),
+
+  tags: router({
+    getTags: protectedProcedure.query(async ({ ctx }) => {
+      return await getUserTags(ctx.user.id);
+    }),
+
+    createTag: protectedProcedure
+      .input(z.object({ name: z.string().min(1).max(100), color: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        return await createTag(ctx.user.id, input.name, input.color || "blue");
+      }),
+
+    updateTag: protectedProcedure
+      .input(z.object({ tagId: z.number(), name: z.string().optional(), color: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        return await updateTag(input.tagId, ctx.user.id, input.name, input.color);
+      }),
+
+    deleteTag: protectedProcedure
+      .input(z.object({ tagId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await deleteTag(input.tagId, ctx.user.id);
+      }),
+
+    addTagToSession: protectedProcedure
+      .input(z.object({ sessionId: z.number(), tagId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await addTagToSession(input.sessionId, input.tagId, ctx.user.id);
+      }),
+
+    removeTagFromSession: protectedProcedure
+      .input(z.object({ sessionId: z.number(), tagId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await removeTagFromSession(input.sessionId, input.tagId, ctx.user.id);
+      }),
+
+    getSessionTags: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await getSessionTags(input.sessionId);
       }),
   }),
 

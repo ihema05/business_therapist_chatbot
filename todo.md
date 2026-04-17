@@ -77,3 +77,15 @@
 - [x] Add rename dialog to session list UI
 - [x] Test delete and rename functionality
 - [x] Create reusable skill for profile page process
+
+## Session Tags Feature
+
+- [x] Create tags and sessionTags database tables
+- [x] Add database helper functions for tag management
+- [x] Create backend procedures for tag management
+- [x] Build tag input component with autocomplete
+- [x] Add tag display and management UI to session sidebar
+- [x] Implement tag filtering in session list
+- [x] Add tag editing and deletion functionality
+- [x] Test tag creation, filtering, and persistence
+- [x] Create checkpoint with tags feature complete
